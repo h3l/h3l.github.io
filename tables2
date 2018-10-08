@@ -1,0 +1,6 @@
+[Relation] ----{ label: "parent_id & child_id";flow: west; } [Organization]
+[Organization] ----{ label: "org_id"; flow: north; }[UserPosition]
+[UserPosition] ----{label: "user_id"; flow: east;} [User]
+[UserPosition] ----{label: "group_id"; flow: north;} [Group]
+[Group] ----{label: "group_id & service_id"; flow: east;} [Service]
+[Service] ----{label: "service_id & api_id"; flow: east;} [Api]
