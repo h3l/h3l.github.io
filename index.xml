@@ -6,10 +6,37 @@
     <description>Recent content on 所以然</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 22 Oct 2018 20:30:02 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 07 Dec 2018 23:10:38 +0800</lastBuildDate>
     
 	<atom:link href="https://h3l.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>如何为 Mac 中不支持的快捷键的菜单栏加上快捷键</title>
+      <link>https://h3l.github.io/posts/automation-with-applescript-and-keyboard-maestro/</link>
+      <pubDate>Fri, 07 Dec 2018 23:10:38 +0800</pubDate>
+      
+      <guid>https://h3l.github.io/posts/automation-with-applescript-and-keyboard-maestro/</guid>
+      <description> 介绍 AppleScript 是苹果系统内置的一门语言，主要是可以完成很多普通脚本完成不了的工作，比如打开某个软件，点击某个菜单栏等等操作。
+简单学习的话，可以看少数派的这篇文章
+Keyboard Maestro是一个将特定的输入和执行动作绑定的一个软件，比如在某个应用按下某个特定的快捷键执行特定的脚本。具体功能可以查看官网，使用方法在安装完软件后会有一个简短的小教程。
+ 主要需求：为 PDF Expert 的日间操作加上快捷键功能  操作  编写 AppleScript 切换到日间模式  tell application &amp;quot;System Events&amp;quot; tell process &amp;quot;PDF Expert&amp;quot; click menu item &amp;quot;日间&amp;quot; of menu &amp;quot;主题&amp;quot; of menu item &amp;quot;主题&amp;quot; of menu &amp;quot;视图&amp;quot; of menu bar item &amp;quot;视图&amp;quot; of menu bar 1 end tell end tell   在 Keyboard Maestro 给 PDF Expert 配置相应的快捷键对应的操作   可选步骤，将快捷键操作配置为制定应用而不是全局执行。在 Groups 里面新建一个 PDF Expert 的 Group，新建的时候选择 Available in these applications ，之后选中 PDF Expert，最后将上一步新建的 Macros 拖动到 PDF Expert 文件夹。  </description>
+    </item>
+    
+    <item>
+      <title>豆瓣 Alfred workflow</title>
+      <link>https://h3l.github.io/posts/douban-workflow/</link>
+      <pubDate>Thu, 06 Dec 2018 23:24:38 +0800</pubDate>
+      
+      <guid>https://h3l.github.io/posts/douban-workflow/</guid>
+      <description>主要需求是因为经常挑书的时候想看看豆瓣评分是多少，可是又不想每次打开豆瓣去搜索。
+之前装的 Alfred 的豆瓣的 workflow 都因为豆瓣 API 的关闭而变得不能用了。
+没得办法，只能自己写一个。最开始的时候是尝试抓取电脑版页面的，结果发现豆瓣没以前那么好爬了，所以在 Chrome 里面打了半天的断点调试了半天也没解出来怎么加密数据的。
+后面灵机一动，既然电脑做了加密，那么手机呢？最后还是通过手机的页面撸完了这个 workflow。
+地址：https://github.com/h3l/douban-workflow
+主要功能：
+ 搜索书籍 搜索电影  截图如下：</description>
+    </item>
     
     <item>
       <title>一种低配版服务降级方法</title>

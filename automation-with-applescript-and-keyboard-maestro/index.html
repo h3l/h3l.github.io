@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+
+<meta name="description" content="Call me Sam, a theme for Hugo.">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:domain" content="https://h3l.github.io">
+
+<meta name="twitter:image" content="https://h3l.github.io/tn.png">
+<meta name="twitter:title" property="og:title" itemprop="title name" content="所以然">
+<meta name="twitter:description" property="og:description" itemprop="description" content="Call me Sam, a theme for Hugo.">
+<meta name="og:type" content="website">
+<meta name="og:url" content="https://h3l.github.io">
+<meta name="og:image" itemprop="image primaryImageOfPage" content="https://h3l.github.io/tn.png">
+
+<link rel="shortcut icon" href="https://h3l.github.io/sam.ico" id="favicon">
+<link rel="stylesheet" href="https://h3l.github.io/css/style.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Didact+Gothic">
+
+
+    
+
+    
+    
+    
+    <title>
+        
+        如何为 Mac 中不支持的快捷键的菜单栏加上快捷键
+        
+    </title>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="section" id="title">如何为 Mac 中不支持的快捷键的菜单栏加上快捷键</div>
+
+        <div class="section" id="content">
+
+<h3 id="介绍">介绍</h3>
+
+<p>AppleScript  是苹果系统内置的一门语言，主要是可以完成很多普通脚本完成不了的工作，比如打开某个软件，点击某个菜单栏等等操作。</p>
+
+<p>简单学习的话，<a href="https://sspai.com/post/43758">可以看少数派的这篇文章</a></p>
+
+<p><a href="https://www.keyboardmaestro.com/main/">Keyboard Maestro</a>是一个将特定的输入和执行动作绑定的一个软件，比如在某个应用按下某个特定的快捷键执行特定的脚本。具体功能可以查看官网，使用方法在安装完软件后会有一个简短的小教程。</p>
+
+<ul>
+<li>主要需求：为 PDF Expert 的日间操作加上快捷键功能</li>
+</ul>
+
+<p><img src="/static/Snipaste_2018-12-07_11-51-45.png" alt="" /></p>
+
+<h3 id="操作">操作</h3>
+
+<ul>
+<li>编写 AppleScript 切换到日间模式</li>
+</ul>
+
+<pre><code class="language-AppleScript">tell application &quot;System Events&quot;
+    tell process &quot;PDF Expert&quot;
+    	click menu item &quot;日间&quot; of menu &quot;主题&quot; of menu item &quot;主题&quot; of menu &quot;视图&quot; of menu bar item &quot;视图&quot; of menu bar 1
+    end tell
+end tell
+</code></pre>
+
+<ul>
+<li>在 Keyboard Maestro 给 PDF Expert 配置相应的快捷键对应的操作</li>
+</ul>
+
+<p><img src="/static/Snipaste_2018-12-07_11-57-09.png" alt="" /></p>
+
+<ul>
+<li>可选步骤，将快捷键操作配置为制定应用而不是全局执行。在 Groups 里面新建一个 PDF Expert 的 Group，新建的时候选择 Available in these applications ，之后选中 PDF Expert，最后将上一步新建的 Macros 拖动到 PDF Expert 文件夹。</li>
+</ul>
+</div>
+
+        
+        
+        
+
+        <div class="section footer"></div>
+    </div>
+</body>
+
+</html>
