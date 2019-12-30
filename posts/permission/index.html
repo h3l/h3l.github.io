@@ -49,10 +49,7 @@
     h3l &#183; 2018-09-09 20:11:04
     
     <hr/>
-    
-
-<p>先简单看一下简单的表结构以及表关系。</p>
-
+    <p>先简单看一下简单的表结构以及表关系。</p>
 <pre><code>+--------------+  group_id &amp; service_id   +----------+  service_id &amp; api_id   +-----+
 |    Group     | ------------------------ | Service  | ---------------------- | Api |
 +--------------+                          +----------+                        +-----+
@@ -68,55 +65,44 @@
 +--------------+  parent_id &amp; child_id    +----------+
 | Organization | ------------------------ | Relation |
 +--------------+                          +----------+
-</code></pre>
-
-<h3 id="表解释">表解释</h3>
-
+</code></pre><h3 id="heading">表解释</h3>
 <ul>
 <li>用户相关
-
 <ul>
 <li><code>User</code> 用于存储用户信息，主要字段为 <code>id</code> 用户信息等</li>
-</ul></li>
+</ul>
+</li>
 <li>组织相关
-
 <ul>
 <li><code>Organization</code> 用于存储组织架构中的单个组织，主要字段为 <code>id</code>,<code>name</code> 等等</li>
 <li><code>Relation</code> 用于存储组织架构中的组织间关系，主要字段为<code>parent_id</code>,<code>child_id</code></li>
-</ul></li>
+</ul>
+</li>
 <li>群组相关
-
 <ul>
 <li><code>Group</code> 用于存储群组信息，主要字段为 <code>id</code> 群组名等</li>
 <li><code>Service</code> 用于存储服务信息，主要字段为 <code>id</code> 服务名称等</li>
-<li><code>Api</code> 用于存储接口信息，主要字段为<code>id</code>,<code>url_name,</code>app_name`等</li>
-<li>另外还有两张表用于存储 <code>Group</code> 与 <code>Service</code> 的多对多关系以及 <code>Service</code> 与 <code>Api</code> 的多对多关系</li>
-</ul></li>
+<li><code>Api </code> 用于存储接口信息，主要字段为<code>id</code>,<code>url_name,</code>app_name`等</li>
+<li>另外还有两张表用于存储 <code>Group</code> 与 <code>Service</code> 的多对多关系以及 <code>Service</code> 与 <code>Api </code> 的多对多关系</li>
+</ul>
+</li>
 <li>将上述关系组织到一起
-
 <ul>
 <li><code>UserPosition</code> 记录一个人在哪些组织上属于什么群组，主要字段有 <code>user_id</code>, <code>group_id</code>, <code>org_id</code></li>
-</ul></li>
 </ul>
-
-<h3 id="概述">概述</h3>
-
+</li>
+</ul>
+<h3 id="heading-1">概述</h3>
 <p>上述的那么多表，其实只是解决了一个问题『<strong>一个人</strong>在<strong>什么范围</strong>能做<strong>什么事情</strong>』。</p>
-
 <ul>
 <li><strong>一个人</strong> 即 用户相关的表</li>
 <li><strong>什么范围</strong>即 组织相关的表</li>
 <li><strong>什么事情</strong> 即 群组相关的表</li>
 </ul>
-
-<h3 id="用户相关">用户相关</h3>
-
+<h3 id="heading-2">用户相关</h3>
 <p>即权限系统中的用户，并无复杂概念</p>
-
-<h3 id="组织相关">组织相关</h3>
-
+<h3 id="heading-3">组织相关</h3>
 <p>现实生活中的组织架构是一个类似树形的不规则结构，如下图所示</p>
-
 <pre><code>                                  +----------+
                    +------------- |   root   | ------+
                    |              +----------+       |
@@ -132,12 +118,8 @@
 +----------+     +----------+     +----------+     +----------+
 | bottom_a |     | bottom_b |     | bottom_c |     | bottom_d |
 +----------+     +----------+     +----------+     +----------+
-</code></pre>
-
-<p>如果是存储树形结构，第一反应可能是在每个节点记录一个 <code>parent_id</code>。这是最简单的做法，但是在查询某个节点的所有子节点的时候却是效率最差的做法。</p>
-
+</code></pre><p>如果是存储树形结构，第一反应可能是在每个节点记录一个 <code>parent_id</code>。这是最简单的做法，但是在查询某个节点的所有子节点的时候却是效率最差的做法。</p>
 <p>这里我们采用的方法是单独拿一张关系表记录父节点到所有子节点的数据。这样做的好处是查询效率非常高，只是在插入数据的时候稍微慢一点，但是考虑到我们的应用是读大于写，所以这样做并无不妥。按照上述说法，则可以用下表表示下图。</p>
-
 <pre><code>                                  +------+
                    +------------- | root | ------+
                    |              +------+       |
@@ -153,78 +135,57 @@
 +----------+     +----------+                  +----------+
 | bottom_a |     | bottom_b |                  | bottom_d |
 +----------+     +----------+                  +----------+
-</code></pre>
-
-<table>
+</code></pre><table>
 <thead>
 <tr>
 <th>父节点</th>
 <th>子节点</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td>root</td>
 <td>mid_a</td>
 </tr>
-
 <tr>
 <td>root</td>
 <td>bottom_a</td>
 </tr>
-
 <tr>
 <td>root</td>
 <td>bottom_b</td>
 </tr>
-
 <tr>
 <td>root</td>
 <td>bottom_d</td>
 </tr>
-
 <tr>
 <td>mid_a</td>
 <td>bottom_a</td>
 </tr>
-
 <tr>
 <td>mid_a</td>
 <td>bottom_b</td>
 </tr>
 </tbody>
 </table>
-
 <p>tip: 如果为了方便，可以为每个节点插入一条父节点和子节点均为自己的记录。</p>
-
 <blockquote>
 <p>该方法并非独创，详细的分析该方法以及与其他方法的对比可参见<a href="https://www.slideshare.net/billkarwin/models-for-hierarchical-data">https://www.slideshare.net/billkarwin/models-for-hierarchical-data</a></p>
 </blockquote>
-
-<h3 id="群组相关">群组相关</h3>
-
+<h3 id="heading-4">群组相关</h3>
 <p>在群组这部分的设计中，包含了五张表。但是关键的概念仅为 <code>Api</code>, <code>Service</code>, <code>Group</code>, 其实这样设计会稍显复杂。那我们为什么要这样设计呢？</p>
-
 <p><strong>最重要的原因是将开发与产品/运营间有效的隔离开。</strong></p>
-
-<p><code>Api</code> 表记录的是系统中所有的接口，这是开发需要维护的部分。</p>
-
+<p><code>Api </code> 表记录的是系统中所有的接口，这是开发需要维护的部分。</p>
 <p><code>Service</code> 表记录的是系统中的功能点，这是需要产品/运用同开发共同维护的部分</p>
-
 <ul>
 <li>产品需要提供要在管理后台中功能点的管理粒度，比如说是：用户管理（包含用户查看，用户删除，用户修改等功能）还是用户查看？</li>
 <li>开发则需要将 Api 中与产品定义好的 Service 关联起来。</li>
 </ul>
-
 <p><code>Group</code> 表记录的是系统中的群组，这是需要产品维护的部分，同时产品需要维护群组与功能点的关系。</p>
-
 <p>ps: <code>Api</code> 表中的 <code>app_name</code> 与 <code>url_name</code> 是为了保证在不同系统中相同的 <code>url</code> 可能会冲突的情况</p>
-
 <p>pss: 🤔仔细想想，Api 表中的 <code>api</code> 是不是可以偷懒的整个一个系统只用同一个呢？甭管你有多少接口，全部一把梭，都用同一个 <code>api</code>。当然可以了，只要能满足需求， <code>api</code> 怎么记录完全看你自己，这也是本系统灵活的原因。</p>
-
 <h3 id="n-more-thing">n more thing</h3>
-
 <ul>
 <li>是不是可以将组织架构依赖公司内部的 hr 系统？这样公司组织架构变动的时候就不用手动维护了。</li>
 <li>是不是可以将用户表也通过对接公司内部的 hr 系统来完成呢？比如对接一个 oauth，这样这个人离职/入职也不用维护这部分内容了。</li>

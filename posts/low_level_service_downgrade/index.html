@@ -50,35 +50,26 @@
     
     <hr/>
     <p>现在微服务是潮流，大多数时候，不管基础的微服务设施有没有搭建好，大项目能拆出来一个是一个，反正拆开了就是微服务。</p>
-
 <p>所以系统从原来的函数调用，变成了 http 调用或者是 rpc 的调用。</p>
-
 <p>原意是为了方便管理项目，提高灵活性等等，可是变为 http 调用后，服务变得不那么可靠了。</p>
-
 <ul>
 <li>情况一，虽然服务不可靠，但是挂了就挂了，依赖这个服务的相关服务也挂了，正常</li>
 <li>情况了，服务不可靠，而且接口响应时间很慢，那么这个时候，本身的服务可能因为这个服务拖垮。</li>
 </ul>
-
 <p>这个时候也没有所谓的熔断器等等的基础设施。</p>
-
 <p>那么有一种低配版的服务降级方法，就是借助 redis 来实现。伪代码如下：</p>
-
-<pre><code class="language-go">// 获取当前被阻塞数
-unhandledCount := redis.Get(&quot;unhandledCount_FUNC_NAME&quot;)
-// 大于被阻塞数，直接返回失败
-if unhandledCount &gt; MAX_UNHANDLED_COUNT{
-    return fail
-}else{
-    redis.Incr(&quot;unhandledCount_FUNC_NAME)
-    resp := http.get(&quot;http://url&quot;)
-    redis.Decr(&quot;unhandledCount_FUNC_NAME&quot;)
-    return resp
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// 获取当前被阻塞数
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">unhandledCount</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">redis</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#e6db74">&#34;unhandledCount_FUNC_NAME&#34;</span>)
+<span style="color:#75715e">// 大于被阻塞数，直接返回失败
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">unhandledCount</span> &gt; <span style="color:#a6e22e">MAX_UNHANDLED_COUNT</span>{
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fail</span>
+}<span style="color:#66d9ef">else</span>{
+    <span style="color:#a6e22e">redis</span>.<span style="color:#a6e22e">Incr</span>(<span style="color:#e6db74">&#34;unhandledCount_FUNC_NAME)
+</span><span style="color:#e6db74">    resp := http.get(&#34;</span><span style="color:#a6e22e">http</span>:<span style="color:#75715e">//url&#34;)
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">redis</span>.<span style="color:#a6e22e">Decr</span>(<span style="color:#e6db74">&#34;unhandledCount_FUNC_NAME&#34;</span>)
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">resp</span>
 }
-</code></pre>
-
-<p>这种方法和 timeout 的方法来比的话，最大的好处就是，别的系统再怎么炸，就不会影响自己的系统。所以这种方法不仅适用与微服务的系统调用，所有依赖第三方的调用也可以通过这种方法保障自身服务稳定。</p>
-
+</code></pre></div><p>这种方法和 timeout 的方法来比的话，最大的好处就是，别的系统再怎么炸，就不会影响自己的系统。所以这种方法不仅适用与微服务的系统调用，所有依赖第三方的调用也可以通过这种方法保障自身服务稳定。</p>
 <p>最后，这也只是一个变通的，低配版的方案，要实实在在的解决这个问题，还是要靠正统的方法。</p>
 
 </div>

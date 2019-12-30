@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on 所以然</title>
@@ -17,10 +17,10 @@
       <pubDate>Fri, 07 Dec 2018 23:10:38 +0800</pubDate>
       
       <guid>https://h3l.github.io/posts/automation-with-applescript-and-keyboard-maestro/</guid>
-      <description> 介绍 AppleScript 是苹果系统内置的一门语言，主要是可以完成很多普通脚本完成不了的工作，比如打开某个软件，点击某个菜单栏等等操作。
+      <description>介绍 AppleScript 是苹果系统内置的一门语言，主要是可以完成很多普通脚本完成不了的工作，比如打开某个软件，点击某个菜单栏等等操作。
 简单学习的话，可以看少数派的这篇文章
 Keyboard Maestro是一个将特定的输入和执行动作绑定的一个软件，比如在某个应用按下某个特定的快捷键执行特定的脚本。具体功能可以查看官网，使用方法在安装完软件后会有一个简短的小教程。
- 主要需求：为 PDF Expert 的日间操作加上快捷键功能  操作  编写 AppleScript 切换到日间模式  tell application &amp;quot;System Events&amp;quot; tell process &amp;quot;PDF Expert&amp;quot; click menu item &amp;quot;日间&amp;quot; of menu &amp;quot;主题&amp;quot; of menu item &amp;quot;主题&amp;quot; of menu &amp;quot;视图&amp;quot; of menu bar item &amp;quot;视图&amp;quot; of menu bar 1 end tell end tell   在 Keyboard Maestro 给 PDF Expert 配置相应的快捷键对应的操作   可选步骤，将快捷键操作配置为制定应用而不是全局执行。在 Groups 里面新建一个 PDF Expert 的 Group，新建的时候选择 Available in these applications ，之后选中 PDF Expert，最后将上一步新建的 Macros 拖动到 PDF Expert 文件夹。  </description>
+ 主要需求：为 PDF Expert 的日间操作加上快捷键功能  操作  编写 AppleScript 切换到日间模式  tell application &amp;#34;System Events&amp;#34; tell process &amp;#34;PDF Expert&amp;#34; click menu item &amp;#34;日间&amp;#34; of menu &amp;#34;主题&amp;#34; of menu item &amp;#34;主题&amp;#34; of menu &amp;#34;视图&amp;#34; of menu bar item &amp;#34;视图&amp;#34; of menu bar 1 end tell end tell  在 Keyboard Maestro 给 PDF Expert 配置相应的快捷键对应的操作   可选步骤，将快捷键操作配置为制定应用而不是全局执行。在 Groups 里面新建一个 PDF Expert 的 Group，新建的时候选择 Available in these applications ，之后选中 PDF Expert，最后将上一步新建的 Macros 拖动到 PDF Expert 文件夹。  </description>
     </item>
     
     <item>
@@ -49,7 +49,7 @@ Keyboard Maestro是一个将特定的输入和执行动作绑定的一个软件�
 原意是为了方便管理项目，提高灵活性等等，可是变为 http 调用后，服务变得不那么可靠了。
  情况一，虽然服务不可靠，但是挂了就挂了，依赖这个服务的相关服务也挂了，正常 情况了，服务不可靠，而且接口响应时间很慢，那么这个时候，本身的服务可能因为这个服务拖垮。  这个时候也没有所谓的熔断器等等的基础设施。
 那么有一种低配版的服务降级方法，就是借助 redis 来实现。伪代码如下：
-// 获取当前被阻塞数 unhandledCount := redis.Get(&amp;quot;unhandledCount_FUNC_NAME&amp;quot;) // 大于被阻塞数，直接返回失败 if unhandledCount &amp;gt; MAX_UNHANDLED_COUNT{ return fail }else{ redis.Incr(&amp;quot;unhandledCount_FUNC_NAME) resp := http.get(&amp;quot;http://url&amp;quot;) redis.Decr(&amp;quot;unhandledCount_FUNC_NAME&amp;quot;) return resp }  这种方法和 timeout 的方法来比的话，最大的好处就是，别的系统再怎么炸，就不会影响自己的系统。所以这种方法不仅适用与微服务的系统调用，所有依赖第三方的调用也可以通过这种方法保障自身服务稳定。
+// 获取当前被阻塞数 unhandledCount := redis.Get(&amp;#34;unhandledCount_FUNC_NAME&amp;#34;) // 大于被阻塞数，直接返回失败 if unhandledCount &amp;gt; MAX_UNHANDLED_COUNT{ return fail }else{ redis.Incr(&amp;#34;unhandledCount_FUNC_NAME) resp := http.get(&amp;#34;http://url&amp;#34;)  redis.Decr(&amp;#34;unhandledCount_FUNC_NAME&amp;#34;) return resp } 这种方法和 timeout 的方法来比的话，最大的好处就是，别的系统再怎么炸，就不会影响自己的系统。所以这种方法不仅适用与微服务的系统调用，所有依赖第三方的调用也可以通过这种方法保障自身服务稳定。
 最后，这也只是一个变通的，低配版的方案，要实实在在的解决这个问题，还是要靠正统的方法。</description>
     </item>
     
@@ -60,7 +60,7 @@ Keyboard Maestro是一个将特定的输入和执行动作绑定的一个软件�
       
       <guid>https://h3l.github.io/posts/permission/</guid>
       <description>先简单看一下简单的表结构以及表关系。
-+--------------+ group_id &amp;amp; service_id +----------+ service_id &amp;amp; api_id +-----+ | Group | ------------------------ | Service | ---------------------- | Api | +--------------+ +----------+ +-----+ | | group_id | +--------------+ user_id +----------+ | UserPosition | ------------------------ | User | +--------------+ +----------+ | | org_id | +--------------+ parent_id &amp;amp; child_id +----------+ | Organization | ------------------------ | Relation | +--------------+ +----------+  表解释  用户相关  User 用于存储用户信息，主要字段为 id 用户信息等  组织相关  Organization 用于存储组织架构中的单个组织，主要字段为 id,name 等等 Relation 用于存储组织架构中的组织间关系，主要字段为parent_id,child_id  群组相关  Group 用于存储群组信息，主要字段为 id 群组名等 Service 用于存储服务信息，主要字段为 id 服务名称等 Api 用于存储接口信息，主要字段为id,url_name,app_name`等 另外还有两张表用于存储 Group 与 Service 的多对多关系以及 Service 与 Api 的多对多关系  将上述关系组织到一起  UserPosition 记录一个人在哪些组织上属于什么群组，主要字段有 user_id, group_id, org_id   概述 上述的那么多表，其实只是解决了一个问题『一个人在什么范围能做什么事情』。</description>
++--------------+ group_id &amp;amp; service_id +----------+ service_id &amp;amp; api_id +-----+ | Group | ------------------------ | Service | ---------------------- | Api | +--------------+ +----------+ +-----+ | | group_id | +--------------+ user_id +----------+ | UserPosition | ------------------------ | User | +--------------+ +----------+ | | org_id | +--------------+ parent_id &amp;amp; child_id +----------+ | Organization | ------------------------ | Relation | +--------------+ +----------+ 表解释  用户相关  User 用于存储用户信息，主要字段为 id 用户信息等   组织相关  Organization 用于存储组织架构中的单个组织，主要字段为 id,name 等等 Relation 用于存储组织架构中的组织间关系，主要字段为parent_id,child_id   群组相关  Group 用于存储群组信息，主要字段为 id 群组名等 Service 用于存储服务信息，主要字段为 id 服务名称等 Api  用于存储接口信息，主要字段为id,url_name,app_name`等 另外还有两张表用于存储 Group 与 Service 的多对多关系以及 Service 与 Api  的多对多关系   将上述关系组织到一起  UserPosition 记录一个人在哪些组织上属于什么群组，主要字段有 user_id, group_id, org_id    概述 上述的那么多表，其实只是解决了一个问题『一个人在什么范围能做什么事情』。</description>
     </item>
     
   </channel>
