@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+
+<meta name="description" content="Call me Sam, a theme for Hugo.">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:domain" content="https://h3l.github.io">
+
+<meta name="twitter:image" content="https://h3l.github.io/tn.png">
+<meta name="twitter:title" property="og:title" itemprop="title name" content="所以然">
+<meta name="twitter:description" property="og:description" itemprop="description" content="Call me Sam, a theme for Hugo.">
+<meta name="og:type" content="website">
+<meta name="og:url" content="https://h3l.github.io">
+<meta name="og:image" itemprop="image primaryImageOfPage" content="https://h3l.github.io/tn.png">
+
+<link rel="shortcut icon" href="https://h3l.github.io/sam.ico" id="favicon">
+<link rel="stylesheet" href="https://h3l.github.io/css/style.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Didact+Gothic">
+
+
+    
+
+    
+    
+    
+    <title>
+        
+        记 20200104 深圳 golang meetup
+        
+    </title>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="section" id="title">记 20200104 深圳 golang meetup</div>
+
+        
+<div class="section" id="content">
+    
+    h3l &#183; 2020-01-05 22:40:42
+    
+    <hr/>
+    <p>早早报名了 gocn 组织的深圳 Golang meetup，花了一整天，听了 7 个主题。简单分享如下。</p>
+<h2 id="1go">1.Go在工业领域的应用实践</h2>
+<p>首先简单叙述了下现在工业领域的痛点主要是没有进行数字化。看不到数据，之后主要介绍他们公司使用 Golang 开发了系统提供给一些制造业的公司。通过对制造业的数字化，可以收集数据，帮助辅助化决策。</p>
+<p>之后他们使用的 Golang 的原因是<strong>方便在各个平台部署</strong>。</p>
+<p>借助 Golang 的 interface 能比较方便的对接各种底层硬件等。之后 show 了一点代码。</p>
+<h2 id="2go">2.Go性能优化之路</h2>
+<p>首先提出<strong>优化是有成本的</strong>，要权衡优化的成本和价值，来决定做不做优化。</p>
+<p>其次是<strong>什么时候停止优化</strong>，优化之前往往需要一个目标，因为优化这个过程是边际效用递减的，所以往往在优化到一定程度的时候就不需要继续优化了。</p>
+<p>如何优化，演讲者明确的给了五步，最后一步为重复第一步，作为一个循环。具体五步如下：</p>
+<ul>
+<li>
+<p>基准</p>
+<ul>
+<li>
+<p>首先优化有个基准才能知道到底是正优化，还是负优化</p>
+</li>
+<li>
+<p>满足基准测试之前，首先要满足单元测试，首先对，然后才是快</p>
+</li>
+<li>
+<p>基准测试的工具主要是 benchmark</p>
+</li>
+</ul>
+</li>
+<li>
+<p>分析</p>
+<ul>
+<li>
+<p>主要是发现瓶颈，并定位瓶颈</p>
+</li>
+<li>
+<p>主要工具如下：</p>
+<ul>
+<li>GODEBUG，通过环境变量的设置，让 Golang 打印堆栈情况</li>
+<li>go tool pprof，可以查看 heap, goroutine, cpu, memery 等情况的瓶颈</li>
+<li>go tool trace</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>优化</p>
+<ul>
+<li>定位到瓶颈之后就是优化了</li>
+</ul>
+</li>
+<li>
+<p>校验</p>
+<ul>
+<li>主要使用 benchstat 将基准测试的数据进行对比。</li>
+</ul>
+</li>
+<li>
+<p>迭代</p>
+<ul>
+<li>重复第一步。</li>
+</ul>
+</li>
+</ul>
+<p>tips：</p>
+<ul>
+<li>
+<p>使用 sync.Pool 复用对象</p>
+</li>
+<li>
+<p>使用 atomic.Value</p>
+</li>
+<li>
+<p>使用分区，减少共享数据的争用</p>
+</li>
+<li>
+<p>避免使用包含指针的结构体作为 map 的 key（例如 string，可以使用 hash）</p>
+</li>
+<li>
+<p>使用 strings.Builder 拼接字符串</p>
+</li>
+<li>
+<p>使用 strconv 替代 fmt</p>
+</li>
+<li>
+<p>避免 []byte 和 string 的转换</p>
+</li>
+<li>
+<p>少使用反射</p>
+</li>
+<li>
+<p>使用 sync.RWMutex 代替 sync.Mutex</p>
+</li>
+</ul>
+<p>私货：这是腾讯的小伙伴分享的内容，个人觉得有参考意义，但是具体在实践中还是要结合自己的实际情况，大多数公司遇到的性能问题，可能都是包括但不限于“数据库慢查询”，“第三方接口把系统拖垮”，“代码逻辑不合理”这几种情况。这些问题基本都可以通过“限流”，“优化慢查询”，“重写代码”来解决，还没到上述中的程度。
+就像辩证唯物法里教我们的一样，分清主要矛盾和次要矛盾。一个“慢查询”带来的危害可能比“使用了 fmt 而没有使用 strconv” 带来的危害大得多。</p>
+<h2 id="3go">3.Go与极限性能实践</h2>
+<p>作者主要结合广发证券在优化行情系统时候做的一些工作，主要分为下面四个方面。</p>
+<ul>
+<li>
+<p>内存使用</p>
+<ul>
+<li>主要是 Golang 中的 GC 较为消耗性能，作者结合 java 中的分代 GC 算法优化 Golang 的 GC 性能。</li>
+<li>主要思想为，生命周期短的对象频繁扫描，生命周期长的对象不需要频繁扫描。</li>
+</ul>
+</li>
+<li>
+<p>并发模型</p>
+<ul>
+<li>我理解的是，一个协程负责接受请求，通过 channel 传送给 n 个 worker，n 个 worker 的结果通过一个 channel 发送给一个协程，统一返回。</li>
+</ul>
+</li>
+<li>
+<p>网络传输</p>
+<ul>
+<li>长链接比短链接好</li>
+<li>无连接比有连接好，通常帧模型与 RPC 更匹配。</li>
+<li>介绍了一点 SPDY 与 QUIC 的资料</li>
+</ul>
+</li>
+<li>
+<p>运行时扩展</p>
+<ul>
+<li>应用程序一般使用运行时库调用 OS 内核</li>
+<li>调用使用 syscall 函数和一个指令编码</li>
+<li>Go 的指令编码在 src/syscall/zsysnum_linux_amd64.go 文件中</li>
+<li>可以自己封装一些 Golang 暂时未提供的系统调用。（如 shmget）</li>
+</ul>
+</li>
+</ul>
+<h2 id="4oppo-">4.OPPO 云平台存储系统架构设计与容器化实践</h2>
+<p>作者主要讲的一些 k8s 和持久化存储方面的东西，下午去迟了，后面就听不太懂了（😭</p>
+<h2 id="5golang">5.从面试题目到Golang汇编</h2>
+<p>作者从一道面试题引出主题，主要内容可以参考《Go 语言高级编程》部分。</p>
+<p>私货：作者思路引出来的很好，但是大多数内容还是偏汇编，很多人听的云里雾里，要想获得知识还是好好去看上面提到的书吧。</p>
+<h2 id="6go">6.如何向Go官方提交代码</h2>
+<p>作者提交的主要是 Golang 在龙芯上运行的代码。简述了一些向 Go 官方提交代码的潜规则。</p>
+<ul>
+<li>
+<p>在 Go 语言的开发时期提交代码，而不是在冻结期提交代码。（8，9，10，4，5，6 为开发期）</p>
+</li>
+<li>
+<p>提交代码的类型</p>
+<ul>
+<li>typo，主要是一些拼写错误等，简单级别</li>
+<li>新特性，为 Golang 添加新特性，中等级别
+<ul>
+<li>不能破坏兼容性</li>
+<li>性能提升太小不行</li>
+<li>新硬件指令需要真是环境</li>
+</ul>
+</li>
+<li>bug，修 bug ，困难级别
+<ul>
+<li>所有平台都没问题</li>
+<li>不引起其他 bug</li>
+</ul>
+</li>
+<li>release-blocker，地狱级别
+<ul>
+<li>阻挡了发版的 bug，难度可想而知</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>作者简易最开始的时候可以提简单级别的 CL（类似于 github 的 PR）</p>
+</li>
+<li>
+<p>必备流程</p>
+<ul>
+<li>跑全量用例（cd src; ./all.bash -v）</li>
+<li>commit 信息
+<ul>
+<li>信息要完整</li>
+<li>修改的依据（引用的数据源）</li>
+<li>如果对应 bug，带上 bug 号</li>
+</ul>
+</li>
+<li>git mail 提交
+<ul>
+<li>记住 change id</li>
+<li>下次提交加上 change id</li>
+</ul>
+</li>
+<li>让 trybot 开心
+<ul>
+<li>trybot 是将你修改的代码在各个平台（Linux，macOS，Windows，ARM 等）运行测试的工具，如果不过可能会要继续修改让测试通过</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="7kubeedgegolang">7.KubeEdge：云原生边缘计算平台的Golang实践</h2>
+<p>作者主要介绍的就是 KubeEdge 这个工具，不过介绍完我还是不知道怎么用🤷‍♂️，干货不多。</p>
+
+</div>
+
+
+        
+<div class="section bottom-menu">
+    
+
+    
+        <a href="/posts">back</a>
+        
+    
+
+    
+</p>
+</div>
+
+
+        <div class="section footer"></div>
+    </div>
+</body>
+
+</html>

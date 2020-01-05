@@ -6,10 +6,33 @@
     <description>Recent content in Posts on 所以然</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 07 Dec 2018 23:10:38 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 05 Jan 2020 22:40:42 +0800</lastBuildDate>
     
 	<atom:link href="https://h3l.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>记 20200104 深圳 golang meetup</title>
+      <link>https://h3l.github.io/posts/20200104-golang-meetup/</link>
+      <pubDate>Sun, 05 Jan 2020 22:40:42 +0800</pubDate>
+      
+      <guid>https://h3l.github.io/posts/20200104-golang-meetup/</guid>
+      <description>早早报名了 gocn 组织的深圳 Golang meetup，花了一整天，听了 7 个主题。简单分享如下。
+1.Go在工业领域的应用实践 首先简单叙述了下现在工业领域的痛点主要是没有进行数字化。看不到数据，之后主要介绍他们公司使用 Golang 开发了系统提供给一些制造业的公司。通过对制造业的数字化，可以收集数据，帮助辅助化决策。
+之后他们使用的 Golang 的原因是方便在各个平台部署。
+借助 Golang 的 interface 能比较方便的对接各种底层硬件等。之后 show 了一点代码。
+2.Go性能优化之路 首先提出优化是有成本的，要权衡优化的成本和价值，来决定做不做优化。
+其次是什么时候停止优化，优化之前往往需要一个目标，因为优化这个过程是边际效用递减的，所以往往在优化到一定程度的时候就不需要继续优化了。
+如何优化，演讲者明确的给了五步，最后一步为重复第一步，作为一个循环。具体五步如下：
+  基准
+  首先优化有个基准才能知道到底是正优化，还是负优化
+  满足基准测试之前，首先要满足单元测试，首先对，然后才是快
+  基准测试的工具主要是 benchmark
+    分析
+  主要是发现瓶颈，并定位瓶颈
+  主要工具如下：
+ GODEBUG，通过环境变量的设置，让 Golang 打印堆栈情况 go tool pprof，可以查看 heap, goroutine, cpu, memery 等情况的瓶颈 go tool trace      优化</description>
+    </item>
     
     <item>
       <title>如何为 Mac 中不支持的快捷键的菜单栏加上快捷键</title>
