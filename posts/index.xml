@@ -6,10 +6,23 @@
     <description>Recent content in Posts on 所以然</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 05 Jan 2020 22:40:42 +0800</lastBuildDate>
+    <lastBuildDate>Wed, 08 Jan 2020 22:37:13 +0800</lastBuildDate>
     
 	<atom:link href="https://h3l.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>好书推荐《深入理解程序设计》</title>
+      <link>https://h3l.github.io/posts/recommand-programming-from-the-ground-up/</link>
+      <pubDate>Wed, 08 Jan 2020 22:37:13 +0800</pubDate>
+      
+      <guid>https://h3l.github.io/posts/recommand-programming-from-the-ground-up/</guid>
+      <description>上周参加了深圳 Golang 的 meetup，其中一位讲师讲了关于 Golang 汇编的知识，奈何不懂汇编，听的云里雾里。在林老师 的推荐下，看了《深入理解程序设计》这本书。虽说没有面面俱到，但是读完竟有一种畅快、醍醐灌顶之感，也是颇为妙哉。之前也是尝试过去读 csapp 这种硬骨头，奈何牙齿不够硬，还是没刚下来。读完一堆八进制、二进制、十六进制、补码云云，就坚持不下去了。
+这本书有以下几个优点：
+ 不整那些有的没得，简单介绍点前置知识，咱就直接写代码 正文只有 150 页，三四天就能读完 通俗易懂，读起来不会很吃力 最后一章推荐的书很棒，已按阅读顺序整理了书单，自下而上—推荐书单, 自顶而下—推荐书单, 具体语言书单，专题书单 汇编中的函数调用写的很清楚（相对 csapp）  缺点也有：
+ 书里的 typo 比较多，看的时候需要主注意，可结合这份勘误阅读 部分例子略显复杂，自己理解的时候可以尝试写一个简单点的例子，再看书中的例子 书中的汇编都是基于 32 位操作系统的，如果你的电脑是 64 位，需要安装 32 位的虚拟机运行书中的例子，选择 Linux 镜像的时候选择 i386 的安装即可。  看完这本书，对函数调用，一个进程的内存分配，stack，heap ，系统调用，链接器，编译器等等这些知识都会有了更深的理解。看这本书之前，我知道计算机有 cpu，硬盘，内存，我也知道高级程序语言可以打开文件，编写程序。但是总觉得中间缺了一道口子，恰好，这本书就填满了这个口子。
+总结的话就是，瑕不掩瑜，非常推荐这本书。</description>
+    </item>
     
     <item>
       <title>记 20200104 深圳 golang meetup</title>
