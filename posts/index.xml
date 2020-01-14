@@ -6,10 +6,22 @@
     <description>Recent content in Posts on 所以然</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 08 Jan 2020 22:37:13 +0800</lastBuildDate>
+    <lastBuildDate>Mon, 13 Jan 2020 00:43:30 +0800</lastBuildDate>
     
 	<atom:link href="https://h3l.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Golang 中 slice cap 增长模式小记</title>
+      <link>https://h3l.github.io/posts/slice-append-grow-analyze/</link>
+      <pubDate>Mon, 13 Jan 2020 00:43:30 +0800</pubDate>
+      
+      <guid>https://h3l.github.io/posts/slice-append-grow-analyze/</guid>
+      <description>在 Golang 中，我们知道数组是固定长度的。一般我们在使用时，大多数情况下使用的其实都是 slice，但是 slice 的底层的数据其实还是数组。所以我们在向 slice append 数据的时候，Golang 会检查底层的数组的长度是否已经不够，如果长度不够，Golang 则会新建一个数组，把原数组的数据拷贝过去，再将 slice 中的指向数组的指针指向新的数组。
+但是，新数组的长度该如何确定呢？如果每次新数组长度只增加 1，那么每次 append 数据都需要新建一个数组。但是如果每次新增数组的长度太大的，又会造成内存的浪费。先写一个简单的代码看看内存如何增长。
+package main import ( &amp;#34;fmt&amp;#34; ) func main() { slice := make([]int, 0, 0) lastCapSize := 0 for i := 0; i &amp;lt; 100000; i++ { slice = append(slice, 1) if lastCapSize != cap(slice) { if i != 0 { fmt.Println(i, cap(slice), float32(cap(slice))/float32(i)) } lastCapSize = cap(slice) } } } 结果如下：
+   last current percent     1 2 200.</description>
+    </item>
     
     <item>
       <title>好书推荐《深入理解程序设计》</title>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+
+<meta name="description" content="Call me Sam, a theme for Hugo.">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:domain" content="https://h3l.github.io">
+
+<meta name="twitter:image" content="https://h3l.github.io/tn.png">
+<meta name="twitter:title" property="og:title" itemprop="title name" content="所以然">
+<meta name="twitter:description" property="og:description" itemprop="description" content="Call me Sam, a theme for Hugo.">
+<meta name="og:type" content="website">
+<meta name="og:url" content="https://h3l.github.io">
+<meta name="og:image" itemprop="image primaryImageOfPage" content="https://h3l.github.io/tn.png">
+
+<link rel="shortcut icon" href="https://h3l.github.io/sam.ico" id="favicon">
+<link rel="stylesheet" href="https://h3l.github.io/css/style.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Didact+Gothic">
+
+
+    
+
+    
+    
+    
+    <title>
+        
+        Golang 中 slice cap 增长模式小记
+        
+    </title>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="section" id="title">Golang 中 slice cap 增长模式小记</div>
+
+        
+<div class="section" id="content">
+    
+    h3l &#183; 2020-01-13 00:43:30
+    
+    <hr/>
+    <p>在 Golang 中，我们知道数组是固定长度的。一般我们在使用时，大多数情况下使用的其实都是 slice，但是 slice 的底层的数据其实还是数组。所以我们在向 slice append 数据的时候，Golang 会检查底层的数组的长度是否已经不够，如果长度不够，Golang 则会新建一个数组，把原数组的数据拷贝过去，再将 slice 中的指向数组的指针指向新的数组。</p>
+<p>但是，新数组的长度该如何确定呢？如果每次新数组长度只增加 1，那么每次 append 数据都需要新建一个数组。但是如果每次新增数组的长度太大的，又会造成内存的浪费。先写一个简单的代码看看内存如何增长。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+
+<span style="color:#f92672">import</span> (
+    <span style="color:#e6db74">&#34;fmt&#34;</span>
+)
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+    <span style="color:#a6e22e">slice</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">int</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>)
+    <span style="color:#a6e22e">lastCapSize</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
+    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">100000</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+        <span style="color:#a6e22e">slice</span> = append(<span style="color:#a6e22e">slice</span>, <span style="color:#ae81ff">1</span>)
+        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">lastCapSize</span> <span style="color:#f92672">!=</span> cap(<span style="color:#a6e22e">slice</span>) {
+            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> {
+                <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">i</span>, cap(<span style="color:#a6e22e">slice</span>), float32(cap(<span style="color:#a6e22e">slice</span>))<span style="color:#f92672">/</span>float32(<span style="color:#a6e22e">i</span>))
+            }
+            <span style="color:#a6e22e">lastCapSize</span> = cap(<span style="color:#a6e22e">slice</span>)
+        }
+    }
+}
+
+</code></pre></div><p>结果如下：</p>
+<table>
+<thead>
+<tr>
+<th>last</th>
+<th>current</th>
+<th>percent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>2</td>
+<td>200.00%</td>
+</tr>
+<tr>
+<td>2</td>
+<td>4</td>
+<td>200.00%</td>
+</tr>
+<tr>
+<td>4</td>
+<td>8</td>
+<td>200.00%</td>
+</tr>
+<tr>
+<td>8</td>
+<td>16</td>
+<td>200.00%</td>
+</tr>
+<tr>
+<td>16</td>
+<td>32</td>
+<td>200.00%</td>
+</tr>
+<tr>
+<td>32</td>
+<td>64</td>
+<td>200.00%</td>
+</tr>
+<tr>
+<td>64</td>
+<td>128</td>
+<td>200.00%</td>
+</tr>
+<tr>
+<td>128</td>
+<td>256</td>
+<td>200.00%</td>
+</tr>
+<tr>
+<td>256</td>
+<td>512</td>
+<td>200.00%</td>
+</tr>
+<tr>
+<td>512</td>
+<td>1024</td>
+<td>200.00%</td>
+</tr>
+<tr>
+<td>1024</td>
+<td>1280</td>
+<td>125.00%</td>
+</tr>
+<tr>
+<td>1280</td>
+<td>1696</td>
+<td>132.50%</td>
+</tr>
+<tr>
+<td>1696</td>
+<td>2304</td>
+<td>135.85%</td>
+</tr>
+<tr>
+<td>2304</td>
+<td>3072</td>
+<td>133.33%</td>
+</tr>
+<tr>
+<td>3072</td>
+<td>4096</td>
+<td>133.33%</td>
+</tr>
+<tr>
+<td>4096</td>
+<td>5120</td>
+<td>125.00%</td>
+</tr>
+<tr>
+<td>5120</td>
+<td>7168</td>
+<td>140.00%</td>
+</tr>
+<tr>
+<td>7168</td>
+<td>9216</td>
+<td>128.57%</td>
+</tr>
+<tr>
+<td>9216</td>
+<td>12288</td>
+<td>133.33%</td>
+</tr>
+<tr>
+<td>12288</td>
+<td>15360</td>
+<td>125.00%</td>
+</tr>
+<tr>
+<td>15360</td>
+<td>19456</td>
+<td>126.67%</td>
+</tr>
+</tbody>
+</table>
+<p>很明显的可以看到，在 cap 长度小于 1024 之前，每次新数组的长度都是旧数组的两倍。但是在 1024 之后增长的速度，最低增长 25%，最高能达到 40%。长度在 1024 之前的很容易理解，可是为什么在 1024 之后会出现这种情况我们就需要翻翻源码了。</p>
+<p>slice 增加长度的源码在 <code>src/runtime/slice.go</code> 的 <code>growslice</code> 函数中。</p>
+<p>关键代码如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">growslice</span>(<span style="color:#a6e22e">et</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span>, <span style="color:#a6e22e">old</span> <span style="color:#a6e22e">slice</span>, <span style="color:#a6e22e">cap</span> <span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">slice</span> {
+    <span style="color:#75715e">// et 是 slice 中元素的类型
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// old 是与老的 slice
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// cap 是增长之后需要的最小的 slice 的 cap 长度
+</span><span style="color:#75715e"></span>
+    <span style="color:#75715e">// 略过一部分代码
+</span><span style="color:#75715e"></span>
+    <span style="color:#a6e22e">newcap</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">old</span>.<span style="color:#a6e22e">cap</span>
+    <span style="color:#a6e22e">doublecap</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">newcap</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">newcap</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">cap</span> &gt; <span style="color:#a6e22e">doublecap</span> {
+        <span style="color:#a6e22e">newcap</span> = <span style="color:#a6e22e">cap</span>
+    } <span style="color:#66d9ef">else</span> {
+        <span style="color:#75715e">// 如果老的长度小于 1024，直接翻倍
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">old</span>.<span style="color:#a6e22e">len</span> &lt; <span style="color:#ae81ff">1024</span> {
+            <span style="color:#a6e22e">newcap</span> = <span style="color:#a6e22e">doublecap</span>
+        } <span style="color:#66d9ef">else</span> {
+            <span style="color:#75715e">// 如果老的长度大于 1024，如果老的长度小于需求的最小长度，
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">// 增加 25% 容量
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">for</span> <span style="color:#ae81ff">0</span> &lt; <span style="color:#a6e22e">newcap</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">newcap</span> &lt; <span style="color:#a6e22e">cap</span> {
+                <span style="color:#a6e22e">newcap</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">newcap</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">4</span>
+            }
+            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">newcap</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> {
+                <span style="color:#a6e22e">newcap</span> = <span style="color:#a6e22e">cap</span>
+            }
+        }
+    }
+
+    <span style="color:#75715e">// 略过一部分代码
+</span><span style="color:#75715e"></span>
+    <span style="color:#66d9ef">switch</span> {
+    <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">et</span>.<span style="color:#a6e22e">size</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>:
+        <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">et</span>.<span style="color:#a6e22e">size</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">sys</span>.<span style="color:#a6e22e">PtrSize</span>:
+        <span style="color:#a6e22e">lenmem</span> = uintptr(<span style="color:#a6e22e">old</span>.<span style="color:#a6e22e">len</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">sys</span>.<span style="color:#a6e22e">PtrSize</span>
+        <span style="color:#a6e22e">newlenmem</span> = uintptr(<span style="color:#a6e22e">cap</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">sys</span>.<span style="color:#a6e22e">PtrSize</span>
+
+        <span style="color:#75715e">// 主要部分是下面一句以及计算 newcap
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// roundupsize 函数根据新的 cap 计算所需要的内存进行对齐，
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// 从而最后导致 newcap 的不是原先的 125%，而是大于等于 125%
+</span><span style="color:#75715e"></span>
+        <span style="color:#75715e">// roundupsize 分配内存也会根据请求的内存大小选择去什么地
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// 方分配内存，这部分内容就不在本篇文章的叙述范围了。
+</span><span style="color:#75715e"></span>        <span style="color:#a6e22e">capmem</span> = <span style="color:#a6e22e">roundupsize</span>(uintptr(<span style="color:#a6e22e">newcap</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">sys</span>.<span style="color:#a6e22e">PtrSize</span>)
+        <span style="color:#a6e22e">overflow</span> = uintptr(<span style="color:#a6e22e">newcap</span>) &gt; <span style="color:#a6e22e">maxAlloc</span><span style="color:#f92672">/</span><span style="color:#a6e22e">sys</span>.<span style="color:#a6e22e">PtrSize</span>
+        <span style="color:#a6e22e">newcap</span> = int(<span style="color:#a6e22e">capmem</span> <span style="color:#f92672">/</span> <span style="color:#a6e22e">sys</span>.<span style="color:#a6e22e">PtrSize</span>)
+    <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">isPowerOfTwo</span>(<span style="color:#a6e22e">et</span>.<span style="color:#a6e22e">size</span>):
+        <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">default</span>:
+        <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>    }
+    <span style="color:#75715e">// 略过一部分代码
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>最后总结一下：slice 在 cap 长度小于 1024 之前容量是翻倍增长，在 cap 长度大于 1024 之后，因为存在着内存对齐，slice 的容量增长方式是最小增加 25%。</p>
+
+</div>
+
+
+        
+<div class="section bottom-menu">
+    
+
+    
+        <a href="/posts">back</a>
+        
+    
+
+    
+</p>
+</div>
+
+
+        <div class="section footer"></div>
+    </div>
+</body>
+
+</html>
