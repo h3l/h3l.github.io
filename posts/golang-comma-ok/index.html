@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+
+<meta name="description" content="Call me Sam, a theme for Hugo.">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:domain" content="https://h3l.github.io">
+
+<meta name="twitter:image" content="https://h3l.github.io/tn.png">
+<meta name="twitter:title" property="og:title" itemprop="title name" content="所以然">
+<meta name="twitter:description" property="og:description" itemprop="description" content="Call me Sam, a theme for Hugo.">
+<meta name="og:type" content="website">
+<meta name="og:url" content="https://h3l.github.io">
+<meta name="og:image" itemprop="image primaryImageOfPage" content="https://h3l.github.io/tn.png">
+
+<link rel="shortcut icon" href="https://h3l.github.io/sam.ico" id="favicon">
+<link rel="stylesheet" href="https://h3l.github.io/css/style.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Didact+Gothic">
+
+
+    
+
+    
+    
+    
+    <title>
+        
+        Golang 中字典的 Comma Ok 是如何实现的
+        
+    </title>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="section" id="title">Golang 中字典的 Comma Ok 是如何实现的</div>
+
+        
+<div class="section" id="content">
+    
+    h3l &#183; 2020-02-29 14:41:14
+    
+    <hr/>
+    <p>众所周知，Golang 中函数的返回值的数量是固定的，而不是像 Python 中那样，函数的返回值数量是不固定的。</p>
+<p>如果我们把 Golang 中对 map 的取值看作是一个函数的话，那么直接取值和用 comma ok 方式取值的实现就变得很意思。</p>
+<p>Golang 中 map 的取值方式</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Golang" data-lang="Golang"><span style="color:#a6e22e">v1</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">m</span>[<span style="color:#e6db74">&#34;test&#34;</span>]
+<span style="color:#a6e22e">v2</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">m2</span>[<span style="color:#e6db74">&#34;test&#34;</span>]
+</code></pre></div><p>先看看汇编是如何实现的。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Golang" data-lang="Golang"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+
+<span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;log&#34;</span>
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+    <span style="color:#a6e22e">m1</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#66d9ef">string</span>)
+    <span style="color:#a6e22e">v1</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">m1</span>[<span style="color:#e6db74">&#34;test&#34;</span>]
+    <span style="color:#a6e22e">v2</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">m1</span>[<span style="color:#e6db74">&#34;test&#34;</span>]
+
+    <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">v1</span>, <span style="color:#a6e22e">v2</span>, <span style="color:#a6e22e">ok</span>)
+}
+</code></pre></div><p>保存上述文件为 map_test.go，执行<code>go tool compile -S map_test.go</code>，截取关键部分</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-asm" data-lang="asm"><span style="color:#a6e22e">...</span>
+    <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00a9</span> <span style="color:#ae81ff">00169</span> (<span style="color:#66d9ef">map_test.go</span>:<span style="color:#ae81ff">7</span>)	<span style="color:#66d9ef">CALL</span>	<span style="color:#66d9ef">runtime.mapaccess2_faststr</span>(<span style="color:#66d9ef">SB</span>)
+<span style="color:#a6e22e">...</span>
+    <span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x00f8</span> <span style="color:#ae81ff">00248</span> (<span style="color:#66d9ef">map_test.go</span>:<span style="color:#ae81ff">8</span>)	<span style="color:#66d9ef">CALL</span>	<span style="color:#66d9ef">runtime.mapaccess1_faststr</span>(<span style="color:#66d9ef">SB</span>)
+<span style="color:#a6e22e">...</span>
+</code></pre></div><p>可以看到，虽然都是 <code>m1[&quot;test&quot;]</code>，但是却调用了 runtime 中不同的方法。
+可以在 <code>go/src/runtime/map_faststr.go</code> 文件中看到</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">mapaccess2_faststr</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">maptype</span>, <span style="color:#a6e22e">h</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">hmap</span>, <span style="color:#a6e22e">ky</span> <span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>, <span style="color:#66d9ef">bool</span>) {}
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">mapaccess1_faststr</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">maptype</span>, <span style="color:#a6e22e">h</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">hmap</span>, <span style="color:#a6e22e">ky</span> <span style="color:#66d9ef">string</span>) <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span> {}
+</code></pre></div><p>这样明显就对上了，但是 Golang 又是如何实现把 <code>m[&quot;test&quot;]</code> 替换为 <code>mapaccess2_faststr</code> 或者 <code>mapaccess1_faststr</code> 的呢？</p>
+<p>这就涉及 Golang 的编译过程了。查看<a href="https://github.com/golang/go/tree/master/src/cmd/compile">官方文档</a>，我们知道编译的过程包括：</p>
+<ul>
+<li>Parsing，包括词法分析，语法分析，抽象语法树的生成。</li>
+<li>Type-checking and AST transformations，包括类型检查，抽象语法树转换。</li>
+<li>Generic SSA，中间代码生成</li>
+<li>Generating machine code，生成机器码</li>
+</ul>
+<p>现在我们就一步一步的看一看，<code>m[&quot;test&quot;]</code>是如何变成<code>mapaccess2_faststr</code>的。（<code>mapaccess1_faststr</code>同理，故不赘述）</p>
+<h3 id="heading">词法分析</h3>
+<p>词法分析，Golang 中的词法分析主要是通过<code>go/src/cmd/compile/internal/syntax/scanner.go</code>（简称scanner.go） 与 <code>go/src/cmd/compile/internal/syntax/tokens.go</code>（简称tokens.go） 完成的，其中，tokens.go 中定义各种字符会被转化成什么样。
+例如：
+tokens.go 中分别定义了 <code>[</code> 与 <code>]</code></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang">    <span style="color:#a6e22e">_Lbrack</span>    <span style="color:#75715e">// [
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">_Rbrack</span>    <span style="color:#75715e">// ]
+</span></code></pre></div><p>会被怎样处理。</p>
+<p>而在 scanner.go 中，通过一个大的 switch 处理各种字符。处理 <code>[</code> 与 <code>]</code> 的部分代码如下:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang">    <span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">c</span> {
+        <span style="color:#75715e">// 略过
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;[&#39;</span>:
+            <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">tok</span> = <span style="color:#a6e22e">_Lbrack</span>
+        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;]&#39;</span>:
+            <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">nlsemi</span> = <span style="color:#66d9ef">true</span>
+            <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">tok</span> = <span style="color:#a6e22e">_Rbrack</span>
+        <span style="color:#75715e">// 略过
+</span><span style="color:#75715e"></span>    }
+</code></pre></div><h3 id="heading-1">语法分析</h3>
+<p>语法分析阶段会将词法分析阶段生成的转换成各种 Expr（表达式），表达式的定义在<code>go/src/cmd/compile/internal/syntax/nodes.go</code>（简称nodes.go）。而 map 取值的表达式定义如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang">    <span style="color:#75715e">// X[Index]
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">IndexExpr</span> <span style="color:#66d9ef">struct</span> {
+        <span style="color:#a6e22e">X</span>     <span style="color:#a6e22e">Expr</span>
+        <span style="color:#a6e22e">Index</span> <span style="color:#a6e22e">Expr</span>
+        <span style="color:#a6e22e">expr</span>
+    }
+</code></pre></div><p>之后再通过<code>go/src/cmd/compile/internal/syntax/parser.go</code>（简称parser.go）中的 <code>pexpr</code> 函数将词法分析阶段的token转化为表达式。关键部分如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang">    <span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">tok</span> {
+        <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">_Lbrack</span>: <span style="color:#75715e">// 遇到一个左方括号
+</span><span style="color:#75715e"></span>            <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">next</span>()
+            <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">xnest</span><span style="color:#f92672">++</span>
+
+            <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">i</span> <span style="color:#a6e22e">Expr</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">tok</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">_Colon</span> { <span style="color:#75715e">// 遇到一个右方括号
+</span><span style="color:#75715e"></span>                <span style="color:#a6e22e">i</span> = <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">expr</span>()
+                <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">got</span>(<span style="color:#a6e22e">_Rbrack</span>) {
+                    <span style="color:#75715e">// x[i]
+</span><span style="color:#75715e"></span>                    <span style="color:#a6e22e">t</span> <span style="color:#f92672">:=</span> new(<span style="color:#a6e22e">IndexExpr</span>) <span style="color:#75715e">// 生成一个 Index表达式
+</span><span style="color:#75715e"></span>                    <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">pos</span> = <span style="color:#a6e22e">pos</span>
+                    <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">X</span> = <span style="color:#a6e22e">x</span>
+                    <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Index</span> = <span style="color:#a6e22e">i</span>
+                    <span style="color:#a6e22e">x</span> = <span style="color:#a6e22e">t</span>
+                    <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">xnest</span><span style="color:#f92672">--</span>
+                    <span style="color:#66d9ef">break</span>
+                }
+            }
+        <span style="color:#75715e">//略
+</span><span style="color:#75715e"></span>    }
+</code></pre></div><p>至此，已经将 <code>m[&quot;key&quot;]</code> 转化为一个 <code>IndexExpr</code> 了。</p>
+<h3 id="heading-2">抽象语法树生成</h3>
+<p>之后，在<code>go/src/cmd/compile/internal/gc/noder.go</code>文件中，再将 <code>IndexExpr</code> 转化成一个<code>OINDEX</code>类型的node，关键代码如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">expr</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">expr</span>.(<span style="color:#66d9ef">type</span>) {
+    <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">case</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">syntax</span>.<span style="color:#a6e22e">IndexExpr</span>:
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">nod</span>(<span style="color:#a6e22e">expr</span>, <span style="color:#a6e22e">OINDEX</span>, <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">expr</span>(<span style="color:#a6e22e">expr</span>.<span style="color:#a6e22e">X</span>), <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">expr</span>(<span style="color:#a6e22e">expr</span>.<span style="color:#a6e22e">Index</span>))
+    <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>其中各种操作类型的定义，如上述的<code>OINDEX</code>在文件<code>go/src/cmd/compile/internal/gc/syntax.go</code>(简称为syntax.go)中，如下</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#a6e22e">OINDEX</span>       <span style="color:#75715e">// Left[Right] (index of array or slice)
+</span></code></pre></div><h2 id="heading-3">类型检查</h2>
+<p>对于上文获得的最后一个 <code>OINDEX</code> 类型的node，他取值的对象即可能是字典，也可能是数组、字符串等。所以要对他们进行区分，而类型检查部分就是做这方面工作的。跟本文相关的函数是<code>go/src/cmd/compile/internal/gc/typecheck.go</code>（简称为typecheck.go）文件中的<code>typecheck1</code>函数。其中关键代码如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">typecheck1</span>(<span style="color:#a6e22e">n</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Node</span>, <span style="color:#a6e22e">top</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">res</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Node</span>) {
+    <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Op</span> {
+    <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">OINDEX</span>: <span style="color:#75715e">// 处理 OINDEX 类型的节点
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// 略过部分检查代码
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// 获取 Left[Right] 中的 Left的类型
+</span><span style="color:#75715e"></span>        <span style="color:#a6e22e">l</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Left</span>
+        <span style="color:#a6e22e">t</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">l</span>.<span style="color:#a6e22e">Type</span>
+        <span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Etype</span> {
+        <span style="color:#66d9ef">default</span>:
+            <span style="color:#a6e22e">yyerror</span>(<span style="color:#e6db74">&#34;invalid operation: %v (type %v does not support indexing)&#34;</span>, <span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">t</span>)
+            <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Type</span> = <span style="color:#66d9ef">nil</span>
+            <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">n</span>
+
+        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">TSTRING</span>, <span style="color:#a6e22e">TARRAY</span>, <span style="color:#a6e22e">TSLICE</span>:
+            <span style="color:#75715e">// 处理 Left 是字符串、数组、切片的情况
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>
+        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">TMAP</span>:
+            <span style="color:#75715e">// 如果 Left 是 MAP，则把该 node 的操作变成 OINDEXMAP
+</span><span style="color:#75715e"></span>            <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Right</span> = <span style="color:#a6e22e">defaultlit</span>(<span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Right</span>, <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Key</span>())
+            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Right</span>.<span style="color:#a6e22e">Type</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+                <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Right</span> = <span style="color:#a6e22e">assignconv</span>(<span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Right</span>, <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Key</span>(), <span style="color:#e6db74">&#34;map index&#34;</span>)
+            }
+            <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Type</span> = <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Elem</span>()
+            <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Op</span> = <span style="color:#a6e22e">OINDEXMAP</span>
+            <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">ResetAux</span>()
+        }
+    }
+}
+</code></pre></div><p>继续对操作为<code>OINDEXMAP</code>（<code>OINDEXMAP</code>也定义在<code>syntax.go</code>中）的 node 节点进行分析。可以看到，在<code>typecheck.go</code>的<code>typecheckas2</code>函数中，继续对<code>OINDEXMAP</code>的节点进行分析。其中关键代码如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">typecheckas2</span>(<span style="color:#a6e22e">n</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Node</span>) {
+    <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">cl</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">List</span>.<span style="color:#a6e22e">Len</span>()
+    <span style="color:#a6e22e">cr</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Rlist</span>.<span style="color:#a6e22e">Len</span>()
+    <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>
+    <span style="color:#75715e">// x, ok = y
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// 参数左边是两个，右边是一个
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">cl</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">cr</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span> {
+        <span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Op</span> {
+        <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">OINDEXMAP</span>, <span style="color:#a6e22e">ORECV</span>, <span style="color:#a6e22e">ODOTTYPE</span>:
+            <span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Op</span> {
+            <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">OINDEXMAP</span>:
+                <span style="color:#75715e">// 如果操作的对象是OINDEXMAP，将其变为 OAS2MAPR
+</span><span style="color:#75715e"></span>                <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Op</span> = <span style="color:#a6e22e">OAS2MAPR</span>
+            }
+        }
+    }
+    <span style="color:#75715e">//略
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>最终，我们的<code>v1, ok := m[&quot;test&quot;]</code>的语句，变成了一个类型为<code>OAS2MAPR</code>的语法树节点。</p>
+<h2 id="heading-4">中间代码生成</h2>
+<p>中间代码生成即将语法树生成与机器码无关的中间代码。生成中间代码的文件为<code>go/src/cmd/compile/internal/gc/walk.go</code>(简称walk.go)，与本文相关的为<code>walk.go</code>文件中的<code>walkexpr</code>函数。关键代码如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">walkexpr</span>(<span style="color:#a6e22e">n</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Node</span>, <span style="color:#a6e22e">init</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Nodes</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Node</span> {
+    <span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Op</span> {
+    <span style="color:#75715e">// a,b = m[i]
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">case</span> <span style="color:#a6e22e">OAS2MAPR</span>:
+        <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>
+        <span style="color:#75715e">// from:
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//   a,b = m[i]
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// to:
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//   var,b = mapaccess2*(t, m, i)
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">//   a = *var
+</span><span style="color:#75715e"></span>        <span style="color:#a6e22e">a</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">List</span>.<span style="color:#a6e22e">First</span>()
+
+        <span style="color:#75715e">// 根据 map 中 key 值类型不同以及值的长度进行优化
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">w</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Elem</span>().<span style="color:#a6e22e">Width</span>; <span style="color:#a6e22e">w</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">1024</span> { <span style="color:#75715e">// 1024 must match runtime/map.go:maxZero
+</span><span style="color:#75715e"></span>            <span style="color:#a6e22e">fn</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">mapfn</span>(<span style="color:#a6e22e">mapaccess2</span>[<span style="color:#a6e22e">fast</span>], <span style="color:#a6e22e">t</span>)
+            <span style="color:#a6e22e">r</span> = <span style="color:#a6e22e">mkcall1</span>(<span style="color:#a6e22e">fn</span>, <span style="color:#a6e22e">fn</span>.<span style="color:#a6e22e">Type</span>.<span style="color:#a6e22e">Results</span>(), <span style="color:#a6e22e">init</span>, <span style="color:#a6e22e">typename</span>(<span style="color:#a6e22e">t</span>), <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Left</span>, <span style="color:#a6e22e">key</span>)
+        } <span style="color:#66d9ef">else</span> {
+            <span style="color:#a6e22e">fn</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">mapfn</span>(<span style="color:#e6db74">&#34;mapaccess2_fat&#34;</span>, <span style="color:#a6e22e">t</span>)
+            <span style="color:#a6e22e">z</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">zeroaddr</span>(<span style="color:#a6e22e">w</span>)
+            <span style="color:#a6e22e">r</span> = <span style="color:#a6e22e">mkcall1</span>(<span style="color:#a6e22e">fn</span>, <span style="color:#a6e22e">fn</span>.<span style="color:#a6e22e">Type</span>.<span style="color:#a6e22e">Results</span>(), <span style="color:#a6e22e">init</span>, <span style="color:#a6e22e">typename</span>(<span style="color:#a6e22e">t</span>), <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">Left</span>, <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">z</span>)
+        }
+        <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>        <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Rlist</span>.<span style="color:#a6e22e">Set1</span>(<span style="color:#a6e22e">r</span>)
+        <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">Op</span> = <span style="color:#a6e22e">OAS2FUNC</span>
+
+       <span style="color:#75715e">// 略
+</span><span style="color:#75715e"></span>
+        <span style="color:#a6e22e">n</span> = <span style="color:#a6e22e">typecheck</span>(<span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">ctxStmt</span>)
+        <span style="color:#a6e22e">n</span> = <span style="color:#a6e22e">walkexpr</span>(<span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">init</span>)
+    }
+}
+</code></pre></div><p>从上述函数我们可以看到，语法树中操作<code>OAS2MAPR</code>为的节点，最终变成了一个类型为<code>OAS2FUNC</code>的节点，而<code>OAS2FUNC</code>则意味着是一个函数调用，最终会被替换为 runtime 中的函数。</p>
+<p>完结。</p>
+<p>参考资料：</p>
+<ul>
+<li><a href="https://github.com/golang/go/tree/master/src/cmd/compile">官方文档</a></li>
+<li><a href="https://draveness.me/golang/docs/part1-prerequisite/ch02-compile/golang-compile-intro/">Go 语言设计与实现</a></li>
+</ul>
+
+</div>
+
+
+        
+<div class="section bottom-menu">
+    
+
+    
+        <a href="/posts">back</a>
+        
+    
+
+    
+</p>
+</div>
+
+
+        <div class="section footer"></div>
+    </div>
+</body>
+
+</html>

@@ -3,17 +3,22 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://h3l.github.io/posts/slice-append-grow-analyze/</loc>
-    <lastmod>2020-01-13T00:43:30+08:00</lastmod>
+    <loc>https://h3l.github.io/posts/golang-comma-ok/</loc>
+    <lastmod>2020-02-29T14:41:14+08:00</lastmod>
   </url>
   
   <url>
     <loc>https://h3l.github.io/posts/</loc>
-    <lastmod>2020-01-13T00:43:30+08:00</lastmod>
+    <lastmod>2020-02-29T14:41:14+08:00</lastmod>
   </url>
   
   <url>
     <loc>https://h3l.github.io/</loc>
+    <lastmod>2020-02-29T14:41:14+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://h3l.github.io/posts/slice-append-grow-analyze/</loc>
     <lastmod>2020-01-13T00:43:30+08:00</lastmod>
   </url>
   

@@ -6,10 +6,24 @@
     <description>Recent content in Posts on 所以然</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 13 Jan 2020 00:43:30 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 29 Feb 2020 14:41:14 +0800</lastBuildDate>
     
 	<atom:link href="https://h3l.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Golang 中字典的 Comma Ok 是如何实现的</title>
+      <link>https://h3l.github.io/posts/golang-comma-ok/</link>
+      <pubDate>Sat, 29 Feb 2020 14:41:14 +0800</pubDate>
+      
+      <guid>https://h3l.github.io/posts/golang-comma-ok/</guid>
+      <description>众所周知，Golang 中函数的返回值的数量是固定的，而不是像 Python 中那样，函数的返回值数量是不固定的。
+如果我们把 Golang 中对 map 的取值看作是一个函数的话，那么直接取值和用 comma ok 方式取值的实现就变得很意思。
+Golang 中 map 的取值方式
+v1, ok := m[&amp;#34;test&amp;#34;] v2 := m2[&amp;#34;test&amp;#34;] 先看看汇编是如何实现的。
+package main import &amp;#34;log&amp;#34; func main() { m1 := make(map[string]string) v1, ok := m1[&amp;#34;test&amp;#34;] v2 := m1[&amp;#34;test&amp;#34;] log.Println(v1, v2, ok) } 保存上述文件为 map_test.go，执行go tool compile -S map_test.go，截取关键部分
+... 0x00a9 00169 (map_test.go:7)	CALL	runtime.mapaccess2_faststr(SB) ... 0x00f8 00248 (map_test.go:8)	CALL	runtime.mapaccess1_faststr(SB) ... 可以看到，虽然都是 m1[&amp;quot;test&amp;quot;]，但是却调用了 runtime 中不同的方法。 可以在 go/src/runtime/map_faststr.go 文件中看到</description>
+    </item>
     
     <item>
       <title>Golang 中 slice cap 增长模式小记</title>
