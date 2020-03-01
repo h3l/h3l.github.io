@@ -233,8 +233,9 @@ tokens.go 中分别定义了 <code>[</code> 与 <code>]</code></p>
         <span style="color:#a6e22e">n</span> = <span style="color:#a6e22e">walkexpr</span>(<span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">init</span>)
     }
 }
-</code></pre></div><p>从上述函数我们可以看到，语法树中操作<code>OAS2MAPR</code>为的节点，最终变成了一个类型为<code>OAS2FUNC</code>的节点，而<code>OAS2FUNC</code>则意味着是一个函数调用，最终会被替换为 runtime 中的函数。</p>
-<p>完结。</p>
+</code></pre></div><p>从上述函数我们可以看到，语法树中操作为<code>OAS2MAPR</code>的节点，最终变成了一个类型为<code>OAS2FUNC</code>的节点，而<code>OAS2FUNC</code>则意味着是一个函数调用，最终会被编译器替换为 runtime 中的函数。</p>
+<h2 id="heading-5">总结</h2>
+<p>我们可以看到，虽然是简简单单的 map 取值，Golang 的编译器也帮我们做了很多额外的工作。同理，其实 Golang 中的 goroutines, defer, make 等等很多函数都是通过这样的方式去处理的</p>
 <p>参考资料：</p>
 <ul>
 <li><a href="https://github.com/golang/go/tree/master/src/cmd/compile">官方文档</a></li>
