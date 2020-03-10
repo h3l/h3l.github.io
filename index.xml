@@ -132,7 +132,9 @@ Keyboard Maestro是一个将特定的输入和执行动作绑定的一个软件�
       
       <guid>https://h3l.github.io/posts/permission/</guid>
       <description>先简单看一下简单的表结构以及表关系。
-+--------------+ group_id &amp;amp; service_id +----------+ service_id &amp;amp; api_id +-----+ | Group | ------------------------ | Service | ---------------------- | Api | +--------------+ +----------+ +-----+ | | group_id | +--------------+ user_id +----------+ | UserPosition | ------------------------ | User | +--------------+ +----------+ | | org_id | +--------------+ parent_id &amp;amp; child_id +----------+ | Organization | ------------------------ | Relation | +--------------+ +----------+ 表解释  用户相关  User 用于存储用户信息，主要字段为 id 用户信息等   组织相关  Organization 用于存储组织架构中的单个组织，主要字段为 id,name 等等 Relation 用于存储组织架构中的组织间关系，主要字段为parent_id,child_id   群组相关  Group 用于存储群组信息，主要字段为 id 群组名等 Service 用于存储服务信息，主要字段为 id 服务名称等 Api  用于存储接口信息，主要字段为id,url_name,app_name`等 另外还有两张表用于存储 Group 与 Service 的多对多关系以及 Service 与 Api  的多对多关系   将上述关系组织到一起  UserPosition 记录一个人在哪些组织上属于什么群组，主要字段有 user_id, group_id, org_id    概述 上述的那么多表，其实只是解决了一个问题『一个人在什么范围能做什么事情』。</description>
+表解释  用户相关  User 用于存储用户信息，主要字段为 id 用户信息等   组织相关  Organization 用于存储组织架构中的单个组织，主要字段为 id,name 等等 Relation 用于存储组织架构中的组织间关系，主要字段为parent_id,child_id   群组相关  Group 用于存储群组信息，主要字段为 id 群组名等 Service 用于存储服务信息，主要字段为 id 服务名称等 Api 用于存储接口信息，主要字段为id,url_name,app_name`等 另外还有两张表用于存储 Group 与 Service 的多对多关系以及 Service 与 Api 的多对多关系   将上述关系组织到一起  UserPosition 记录一个人在哪些组织上属于什么群组，主要字段有 user_id, group_id, org_id    概述 上述的那么多表，其实只是解决了一个问题『一个人在什么范围能做什么事情』。
+ 一个人 即 用户相关的表 什么范围即 组织相关的表 什么事情 即 群组相关的表  用户相关 即权限系统中的用户，并无复杂概念
+组织相关 现实生活中的组织架构是一个类似树形的不规则结构，如下图所示</description>
     </item>
     
   </channel>
