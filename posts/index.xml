@@ -6,10 +6,25 @@
     <description>Recent content in Posts on 所以然</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 08 Mar 2020 23:53:47 +0800</lastBuildDate>
+    <lastBuildDate>Mon, 09 Mar 2020 13:50:10 +0800</lastBuildDate>
     
 	<atom:link href="https://h3l.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>《Redis设计与实现》数据结构与对象小记</title>
+      <link>https://h3l.github.io/posts/redis-struct/</link>
+      <pubDate>Mon, 09 Mar 2020 13:50:10 +0800</pubDate>
+      
+      <guid>https://h3l.github.io/posts/redis-struct/</guid>
+      <description>本文是《Redis设计与实现》的数据结构与对象部分的流水账记录。建议先阅读该书。
+数据结构 简单动态字符串(SDS, simple dynamic string) 用处：
+ key value aof 缓冲区  特点：
+ 可修改 可以直接返回长度 更安全 性能更高（空间预分配，惰性空间释放）  结构：
+ int free，可用空间 int len，字符串长度 char buf[]，保存字符串  链表 用处：
+ 列表 发布与订阅 慢查询 监视器  结构：
+ ListNode  listNode * pre，前置节点 listNode * next，后置节点 void * value，值   list  listNode * head，列表头 listNode * tail，列表尾 unsigned long len,列表长度    字典 依赖算法：使用 MurmurHash2 算法计算哈希值，速度快，分布随机</description>
+    </item>
     
     <item>
       <title>《正则表达式必知必会》读书笔记——脑图</title>

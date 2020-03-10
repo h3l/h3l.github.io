@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="chrome=1">
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+
+<meta name="description" content="Call me Sam, a theme for Hugo.">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:domain" content="https://h3l.github.io">
+
+<meta name="twitter:image" content="https://h3l.github.io/tn.png">
+<meta name="twitter:title" property="og:title" itemprop="title name" content="所以然">
+<meta name="twitter:description" property="og:description" itemprop="description" content="Call me Sam, a theme for Hugo.">
+<meta name="og:type" content="website">
+<meta name="og:url" content="https://h3l.github.io">
+<meta name="og:image" itemprop="image primaryImageOfPage" content="https://h3l.github.io/tn.png">
+
+<link rel="shortcut icon" href="https://h3l.github.io/sam.ico" id="favicon">
+<link rel="stylesheet" href="https://h3l.github.io/css/style.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Didact+Gothic">
+
+
+    
+
+    
+    
+    
+    <title>
+        
+        《Redis设计与实现》数据结构与对象小记
+        
+    </title>
+
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-159830455-1"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-159830455-1');
+    </script>
+
+
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="section" id="title">《Redis设计与实现》数据结构与对象小记</div>
+
+        
+<div class="section" id="content">
+    
+    h3l &#183; 2020-03-09 13:50:10
+    
+    <hr/>
+    <p>本文是<a href="https://book.douban.com/subject/25900156/">《Redis设计与实现》</a>的数据结构与对象部分的<strong>流水账记录</strong>。建议先阅读该书。</p>
+<h2 id="heading">数据结构</h2>
+<h3 id="sds-simple-dynamic-string">简单动态字符串(SDS, simple dynamic string)</h3>
+<p>用处：</p>
+<ul>
+<li>key</li>
+<li>value</li>
+<li>aof 缓冲区</li>
+</ul>
+<p>特点：</p>
+<ul>
+<li>可修改</li>
+<li>可以直接返回长度</li>
+<li>更安全</li>
+<li>性能更高（空间预分配，惰性空间释放）</li>
+</ul>
+<p>结构：</p>
+<ul>
+<li><code>int free</code>，可用空间</li>
+<li><code>int len</code>，字符串长度</li>
+<li><code>char buf[]</code>，保存字符串</li>
+</ul>
+<h3 id="heading-1">链表</h3>
+<p>用处：</p>
+<ul>
+<li>列表</li>
+<li>发布与订阅</li>
+<li>慢查询</li>
+<li>监视器</li>
+</ul>
+<p>结构：</p>
+<ul>
+<li>ListNode
+<ul>
+<li><code>listNode * pre</code>，前置节点</li>
+<li><code>listNode * next</code>，后置节点</li>
+<li><code>void * value</code>，值</li>
+</ul>
+</li>
+<li>list
+<ul>
+<li><code>listNode * head</code>，列表头</li>
+<li><code>listNode * tail</code>，列表尾</li>
+<li><code>unsigned long len</code>,列表长度</li>
+</ul>
+</li>
+</ul>
+<h3 id="heading-2">字典</h3>
+<p>依赖算法：使用 <code>MurmurHash2</code> 算法计算哈希值，速度快，分布随机</p>
+<p>用处：</p>
+<ul>
+<li>整个 redis 底层就使用字典</li>
+<li>hash</li>
+</ul>
+<p>结构：</p>
+<ul>
+<li><code>dictht</code>
+<ul>
+<li><code>dictEntry **table</code>，哈希表数组</li>
+<li><code>unsigned long size</code>，哈希表大小，table 数组大小</li>
+<li><code>unsigned long sizemask</code>，哈希表大小掩码，用于计算索引，等于 <code>size - 1</code></li>
+<li><code>unsigned long used</code>，已有节点数</li>
+</ul>
+</li>
+<li><code>dictEntry</code>
+<ul>
+<li><code>void *key</code>, 键</li>
+<li><code>union</code>，值</li>
+<li><code>dictEntry *next</code>，指向下一个哈希表节点（解决冲突问题）</li>
+</ul>
+</li>
+<li><code>dict</code>
+<ul>
+<li>type，提供为特定类型的键值对的函数</li>
+<li>private，传递给type中函数的特定参数</li>
+<li><code>dictht ht[2]</code>,一般只用 <code>ht[0]</code>, rehash 的使用会用 <code>ht[1]</code></li>
+<li><code>rehashidx</code>, rehash 进度，没有 rehash 时为 -1</li>
+</ul>
+</li>
+</ul>
+<p>行为：</p>
+<ul>
+<li>冲突，链表法解决冲突</li>
+<li>rehash
+<ul>
+<li>渐进式 rehash</li>
+<li>负载计算：load_factor = ht[0].used / ht[0].size</li>
+<li>rehash 时机：
+<ul>
+<li>未执行 <code>BGSAVE</code> 或 <code>BGREWRITEAOF</code>并且负载大于等于1</li>
+<li>执行 <code>BGSAVE</code> 或 <code>BGREWRITEAOF</code>并且负载大于等于5</li>
+<li>负载小于 0.1 会收缩</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="heading-3">跳跃表</h3>
+<p>特点：</p>
+<ul>
+<li>实现简单</li>
+<li>批量处理节点</li>
+<li>平均时间复杂度 O(logN)，最坏 O(N)</li>
+</ul>
+<p>用处：</p>
+<ul>
+<li>有序集合</li>
+<li>集群内部</li>
+</ul>
+<p>结构：</p>
+<ul>
+<li>zskiplist
+<ul>
+<li>header 指向跳跃表表头</li>
+<li>tail 指向跳跃表表尾</li>
+<li>level 当前跳跃表层数</li>
+<li>length 跳跃表长度，即其中元素个数</li>
+</ul>
+</li>
+<li>zskiplistNode
+<ul>
+<li>层（是一个数组，有多个层），是随机生成的
+<ul>
+<li>包括前进指针和跨度（跨度用于计算排位（rank））</li>
+</ul>
+</li>
+<li>后退指针</li>
+<li>分值</li>
+<li>成员对象</li>
+</ul>
+</li>
+</ul>
+<h3 id="heading-4">整数集合</h3>
+<p>用处：</p>
+<ul>
+<li>整数类型的集合</li>
+</ul>
+<p>结构：</p>
+<ul>
+<li>encoding 编码方式（决定 contents 中元素的类型）</li>
+<li>length 集合的元素</li>
+<li>contents 数组，保存集合的元素，有序排列</li>
+</ul>
+<p>行为：</p>
+<ul>
+<li>升级
+<ul>
+<li>当向集合中添加新元素时，新元素类型比已有的类型都要长，会将已有元素的类型都变成新元素的类型</li>
+</ul>
+</li>
+<li>不支持降级</li>
+</ul>
+<h3 id="heading-5">压缩列表</h3>
+<p>特点：</p>
+<ul>
+<li>节约内存</li>
+<li>连续内存</li>
+</ul>
+<p>用处：</p>
+<ul>
+<li>列表（少量列表项，并且列表项为短字符串或小整数）</li>
+<li>hash（少量键值对，键和值要么是短字符串要么是小整数）</li>
+</ul>
+<p>结构：</p>
+<ul>
+<li>zl
+<ul>
+<li>zlbytes，4 字节，压缩列表占用的字节数</li>
+<li>zltail，4 字节，表尾节点距起始点字节数</li>
+<li>zllen，2 字节，节点数量</li>
+<li>entryX，不定，节点列表</li>
+<li>zlend，1字节，OxFF 标记结尾</li>
+</ul>
+</li>
+<li>节点
+<ul>
+<li>previous_entry_length，1或5字节，前置节点长度（5字节的时候使用 0xFE 作为开头），从后往前遍历</li>
+<li>encoding</li>
+<li>content</li>
+</ul>
+</li>
+</ul>
+<p>行为：</p>
+<ul>
+<li>连锁更新</li>
+</ul>
+<h2 id="heading-6">对象</h2>
+<p>包含</p>
+<ul>
+<li>字符串对象</li>
+<li>列表对象</li>
+<li>哈希对象</li>
+<li>集合对象</li>
+<li>有序集合对象</li>
+</ul>
+<p>对于 redis 保存的键值对来说，键总是一个字符串对象，而值则可能是上述任一。</p>
+<p>特点：</p>
+<ul>
+<li>根据场景选择底层实现</li>
+<li>基于计数的内存回收</li>
+</ul>
+<p>结构：</p>
+<ul>
+<li>type，类型</li>
+<li>encoding，编码</li>
+<li>ptr，指向底层数据结构的指针</li>
+<li>refcount，引用计数（<code>OBJECT REFCOUNT key</code>返回一个键被引用的次数）</li>
+<li>lru，记录最后被访问的时间（<code>OBJECT IDLETIME key</code>返回一个键多久没被访问）</li>
+</ul>
+<h3 id="heading-7">字符串对象</h3>
+<p>编码：</p>
+<ul>
+<li>int</li>
+<li>raw（申请两次内存）</li>
+<li>embstr（申请一次内存，但是连续，不可修改）</li>
+</ul>
+<h3 id="heading-8">列表对象</h3>
+<p>编码（底层实现方式）：</p>
+<ul>
+<li>ziplist
+<ul>
+<li>在每个元素小于 64 字节，且列表长度小于 512 时使用压缩列表（可通过 <code>list-max-ziplist-value</code> 和 <code>list-max-ziplist-entries</code>配置）</li>
+</ul>
+</li>
+<li>linkedlist</li>
+</ul>
+<h3 id="heading-9">哈希对象</h3>
+<p>编码（底层实现方式）：</p>
+<ul>
+<li>ziplist
+<ul>
+<li>每个键值对都小于 64 字节，且哈希键值数量小于 512 时使用压缩列表（可通过 <code>hash-max-ziplist-value</code> 和 <code>hash-max-ziplist-entries</code>配置）</li>
+</ul>
+</li>
+<li>hashtable</li>
+</ul>
+<h3 id="heading-10">集合对象</h3>
+<p>编码（底层实现方式）：</p>
+<ul>
+<li>intset
+<ul>
+<li>对象都是整数，且元素数量小于 512（元素数量可通过<code>set-max-intet-entries</code>修改）</li>
+</ul>
+</li>
+<li>hashtable</li>
+</ul>
+<h3 id="heading-11">有序集合</h3>
+<p>编码（底层实现方式）：</p>
+<ul>
+<li>ziplist（分值小在表头，大的在表尾）
+<ul>
+<li>每个成员长度小于 64 字节，元素小于 128 个（可通过 <code>zset-max-ziplist-value</code> 和 <code>zset-max-ziplist-entries</code>配置）</li>
+</ul>
+</li>
+<li>skiplist（同时使用了一个hashtable，用于查询快速分值，并且底层的元素都是通过指针）</li>
+</ul>
+<p>tips：</p>
+<h2 id="heading-12">操作</h2>
+<p><code>OBJECT ENCODING key</code>返回一个键的值编码。</p>
+<p><code>TYPE</code>返回一个键的值对象类型。</p>
+<p><code>OBJECT REFCOUNT key</code>返回一个键被引用的次数。</p>
+<p>参考资料：</p>
+<ul>
+<li><a href="https://book.douban.com/subject/25900156/">《Redis设计与实现》</a></li>
+</ul>
+
+</div>
+
+
+        
+<div class="section bottom-menu">
+    
+
+    
+        <a href="/posts">back</a>
+        
+    
+
+    
+</p>
+</div>
+
+
+        <div class="section footer"></div>
+    </div>
+</body>
+
+</html>
