@@ -6,10 +6,31 @@
     <description>Recent content on 所以然</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 09 Mar 2020 13:50:10 +0800</lastBuildDate>
+    <lastBuildDate>Tue, 10 Mar 2020 23:27:17 +0800</lastBuildDate>
     
 	<atom:link href="https://h3l.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>记一次 Python 使用读写分离遇到的坑</title>
+      <link>https://h3l.github.io/posts/python-mysql-proxy-hole/</link>
+      <pubDate>Tue, 10 Mar 2020 23:27:17 +0800</pubDate>
+      
+      <guid>https://h3l.github.io/posts/python-mysql-proxy-hole/</guid>
+      <description>背景 读写分离是随着访问量越来越大过程中有效提高系统负载能力的手段之一。对于上了阿里云或者各种云的用户来说，这些云提供商会直接提供读写分离的服务供你使用。所以我们的服务也理所当然的上了读写分离服务，而且这种服务是对应用层透明的，完全不用管链接的是主库还是读库，一切交给云平台帮你搞定。
+但是用了很久，感觉我们的服务在遇到大流量的时候还是不可靠，经常容易数据库抗不过来。直到有一次 dba 在发送慢查询日志的时候，我突然转念一想，让 dba 分别发送了主库和只读库的慢查询日志。不看不知道，一看吓一跳，只读库上的慢查询是空的，而慢查询则全部集中在主库。这就让人感到很奇怪了。
+排查问题 从库没有慢查询？这也太巧合了。因为读写分离对开发来说就是一个地址，所以就去问 dba，dba 表示你们开启了事务，所以没有用到从库。我们就仔细检查代码，也只有少部分逻辑开启了事务啊，而且从经验上讲也说不通，虽然说高并发顶不住，但是一个主库能顶住平时那么多的请求感觉也是不太可能的。
+中间经历了和 dba 的漫长讨论时间…
+靠人不如靠己。既然 dba 说不出个所以然，那就直接找 dba 要了主库从库的地址。直接用 MySQLWorkbench 连接到主库和从库查看 SQL 语句的执行情况，发现从库真的没用上。之后一想，我们有几个服务都买了读写分离的服务，去看看他们的情况如何，发现他们也一样没用上读写分离。告知过后，他们表示改一个配置就可以用上了（他们使用的是 java 开发）。最后他们成功的用上了。
+而我们，依旧没用上。经过漫长的排查，最后发现是 Python 一个 pep 的锅。
+依据pep-0249中的规范，如果数据库支持 auto-commit，那么必须在初始化的时候将其关闭。而我们用的 SQLAlchemy 也仅仅是遵循了这个 pep 而已。
+那么 auto-commit 是什么意思呢？
+在 auto-commit 为开的时候，每单独执行一条语句，都是在一个事务中的。除非显性的使用 BEGIN，否则每个语句结束都会直接默认隐含一个 COMMIT。
+而在 auto-commit 为关闭的时候，每执行一条语句，都还在一个还没 commit 的一个事务里。既然还在一个未 commit 的事务里，那么读写分离的 proxy 当然就会把这条语句放在主库上执行了。
+总结一下，auto-commit 为 0 时，读写分离的 proxy 是无效的。
+解决办法 第一种方式，直接让 SQLAlchemy 在 auto-commit 等于 1 的情况下运行，但是问题就是这个不是官方推荐的方式，所以出了问题会很棘手，而且原先的项目已经相当庞大了，改一个如此底层的配置，风险也会相当大。
+第二种方式，也是我们最终采用的方式，复写了 SQLAlchemy 的 get_engine 方法。初始了多个 bind，在运行中手动的将一些请求量大的请求的 bind 改到从库上。这样的好处就是对原先的业务无影响，并且可以手动的、分批的修改。</description>
+    </item>
     
     <item>
       <title>《Redis设计与实现》数据结构与对象小记</title>
